@@ -11,7 +11,7 @@ import configparser
 dir = '/dwdata/kingslanding'
 csv_file = 'trulioo_raw.csv'
 csv_file_read_json = 'trulioo_test_read_json.csv'
-dir_s3 = 's3://cs-etl-pipeline/cs_incremental/kingslanding'
+dir_s3 = 'FILE PATH'
 
 redshift_schema = 'kingslanding_testing'
 redshift_table = 'trulioo_read_json'
@@ -31,14 +31,14 @@ copy_query = """
 
 ##########################################################
 ################ connext to redshift
-passw = pgpasslib.getpass('cumulonimbogenitus.cvpqdfcjsb13.ca-central-1.redshift.amazonaws.com',
+passw = pgpasslib.getpass('AWS HOST ADDRESS',
   5439,
-  'fractus',
-  'colin')
+  'DATABASE',
+  'USER')
 conn_red = psycopg2.connect(
-  host='cumulonimbogenitus.cvpqdfcjsb13.ca-central-1.redshift.amazonaws.com',
-  user='colin',
-    dbname='fractus',
+  host='AWS HOST ADDRESS',
+  user='USER',
+    dbname='DATABASE',
     password=passw,
     port=5439,
     connect_timeout=500)
@@ -184,11 +184,13 @@ def flattenTableRows(csvarray):
 ################ create rule match with category_3kyc_v3 and save to csv2 and return dataframe and push to s3 server
 
 def category_3kyc_v3(matchtorule):
-# created lists of countries for different countries rules
-# countries_1 in : AT, BE, DK, FR, NO, ES, PT
-# countries_2 in : IT
-# countries_3 in : NL
-# countries_4 in : GB
+    '''
+    # created lists of countries for different countries rules
+    # countries_1 in : AT, BE, DK, FR, NO, ES, PT
+    # countries_2 in : IT
+    # countries_3 in : NL
+    # countries_4 in : GB
+    '''
     countries_1 = ['AT','BE','DK','FR','NO','ES','PT']
     countries_2 = ['IT']
     countries_3 = ['NL']
@@ -196,8 +198,9 @@ def category_3kyc_v3(matchtorule):
     id_datasources = ['passport','license','number']
 
 
-
-# find out if the full name is match first
+    '''
+    Find out if the full name is match first
+    '''
     for source in matchtorule:
         source['name_match'] =0
         source['dob_match'] =0
@@ -207,8 +210,9 @@ def category_3kyc_v3(matchtorule):
         if ('FirstGivenName' in list(source.keys()) and source['FirstGivenName'] == 'match' and              'FirstSurName' in list(source.keys()) and source['FirstSurName'] == 'match') or         (source['country'] in countries_3              and ( ('FirstInitial' in list(source.keys()) and source['FirstInitial'] == 'match') or                    ('GivenInitials' in list(source.keys()) and source['GivenInitials'] == 'match') or                    ('GivenNames' in list(source.keys()) and source['GivenNames'] == 'match' and                  source['GivenMames'] != 'nomatch') or                    ('FirsGivenName' in list(source.keys()) and source['FirstGivenName'] == 'match' and                  source['FirstGivenName'] != 'nomatch'))              and ('LastName' in list(source.keys()) and source['LastName'] == 'match')) :
             source['name_match'] = 1
 
-
+    '''
     #check data sources
+    '''
         #    if all(i not in source['datasource'].lower() for i in id_datasources):
 
 
@@ -217,40 +221,41 @@ def category_3kyc_v3(matchtorule):
         if 'DayOfBirth' in list(source.keys()) and source['DayOfBirth'] == 'match':
             source['dob_match'] = 1
 
-
-# if the full name is match but dob is not match, go to countries
-        if source['country'] in countries_1                 and (('Ciry' in list(source.keys()) and source['Ciry'] == 'match')                      or ('PostalCode' in list(source.keys()) and source['PostalCode'] == 'match'))                 and ('HouseNumber' in list(source.keys()) and source['HouseNumber'] == 'match')                 and ('StreetName' in list(source.keys()) and source['StreetName'] == 'match') :
+    '''
+    # if the full name is match but dob is not match, go to countries
+    '''
+        if source['country'] in countries_1 and (('Ciry' in list(source.keys()) and source['Ciry'] == 'match') or ('PostalCode' in list(source.keys()) and source['PostalCode'] == 'match')) and ('HouseNumber' in list(source.keys()) and source['HouseNumber'] == 'match') and ('StreetName' in list(source.keys()) and source['StreetName'] == 'match') :
             source['address_match'] = 1
 
 
-        if source['country'] in countries_2                 and (('Ciry' in list(source.keys()) and source['Ciry'] == 'match')                      or ('PostalCode' in list(source.keys()) and source['PostalCode'] =='match'))                 and 'HouseNumber' in list(source.keys()) and source['HouseNumber'] == 'match'                 and 'StreetName' in list(source.keys()) and source['StreetName'] == 'match'                and 'UnitNumber' in list(source.keys()) and source['UnitNumber'] != 'nomatch':
+        if source['country'] in countries_2 and (('Ciry' in list(source.keys()) and source['Ciry'] == 'match') or ('PostalCode' in list(source.keys()) and source['PostalCode'] =='match')) and 'HouseNumber' in list(source.keys()) and source['HouseNumber'] == 'match' and 'StreetName' in list(source.keys()) and source['StreetName'] == 'match' and 'UnitNumber' in list(source.keys()) and source['UnitNumber'] != 'nomatch':
             source['address_match'] = 1
 
-        if source['country'] in countries_3                 and (('PostalCode' in list(source.keys()) and source['PostalCode'] == 'match'                       and 'HouseNumber' in list(source.keys()) and source['HouseNumber'] == 'match' )                      or ('HouseNumber' in list(source.keys()) and source['HouseNumber'] == 'match'                          and 'StreetName' in list(source.keys()) and source['StreetName'] == 'match'                          and 'Ciry' in list(source.keys()) and source['Ciry'] == 'match')):
+        if source['country'] in countries_3 and (('PostalCode' in list(source.keys()) and source['PostalCode'] == 'match' and 'HouseNumber' in list(source.keys()) and source['HouseNumber'] == 'match' ) or ('HouseNumber' in list(source.keys()) and source['HouseNumber'] == 'match' and 'StreetName' in list(source.keys()) and source['StreetName'] == 'match' and 'Ciry' in list(source.keys()) and source['Ciry'] == 'match')):
             source['address_match'] = 1
 
-        if source['country'] in countries_4                 and 'PostalCode' in list(source.keys()) and 'StreetName' in list(source.keys())                 and source['PostalCode'] == 'match' and source['StreetName'] == 'match'                 and (('BuildingName' in list(source.keys()) and source['BuildingName'] == 'match')                 or ('BuildingNumber' in list(source.keys()) and source['BuildingNumber'] == 'match')):
+        if source['country'] in countries_4 and 'PostalCode' in list(source.keys()) and 'StreetName' in list(source.keys()) and source['PostalCode'] == 'match' and source['StreetName'] == 'match' and (('BuildingName' in list(source.keys()) and source['BuildingName'] == 'match') or ('BuildingNumber' in list(source.keys()) and source['BuildingNumber'] == 'match')):
             source['address_match'] = 1
 
 
+    '''
+    # if full name is match but dob and address are not match, go to id
+    #id match: (DriversLicense
+    #                         OR MedicareNumber
+    #                         OR MxCurp
+    #                         OR NationalIDNumber
+    #                         OR NHSNumber
+    #                         OR NINumber
+    #                         OR PassportNumber
+    #                         OR PersonalPublicServiceNumber
+    #                         OR RegistrationNumber
+    #                         OR SePinNumber
+    #                         OR SgNRICNumber
+    #                         OR SocialInsuranceNumber
+    #                         OR SocialSecurityNumber)
+    '''
 
-# if full name is match but dob and address are not match, go to id
-#id match: (DriversLicense
-#                         OR MedicareNumber
-#                         OR MxCurp
-#                         OR NationalIDNumber
-#                         OR NHSNumber
-#                         OR NINumber
-#                         OR PassportNumber
-#                         OR PersonalPublicServiceNumber
-#                         OR RegistrationNumber
-#                         OR SePinNumber
-#                         OR SgNRICNumber
-#                         OR SocialInsuranceNumber
-#                         OR SocialSecurityNumber)
-
-
-        if ( 'DriversLicense' in list(source.keys()) and source['DriversLicense'] =='match') or                  ( 'MedicareNumber' in list(source.keys()) and source['MedicareNumber'] =='match') or                  ( 'MxCurp' in list(source.keys()) and source['MxCurp'] =='match') or                  ( 'NationalIDNumber' in list(source.keys()) and source['NationalIDNumber'] =='match') or                  ( 'NHSNumber' in list(source.keys()) and source['NHSNumber'] =='match') or                  ( 'NINumber' in list(source.keys()) and source['NINumber'] =='match') or                  ( 'PassportNumber' in list(source.keys()) and source['PassportNumber'] =='match') or                  ( 'PersonalPublicServiceNumber' in list(source.keys()) and source['PersonalPublicServiceNumber'] =='match') or                  ( 'RegistrationNumber' in list(source.keys()) and source['RegistrationNumber'] =='match') or                  ( 'SePinNumber' in list(source.keys()) and source['SePinNumber'] =='match') or                  ( 'SgNRICNumber' in list(source.keys()) and source['SgNRICNumber'] =='match') or                  ( 'SocialInsuranceNumber' in list(source.keys()) and ource['SocialInsuranceNumber'] =='match') or                  ( 'SocialSecurityNumber' in list(source.keys()) and source['SocialSecurityNumber'] =='match'):
+        if ( 'DriversLicense' in list(source.keys()) and source['DriversLicense'] =='match') or ( 'MedicareNumber' in list(source.keys()) and source['MedicareNumber'] =='match') or ( 'MxCurp' in list(source.keys()) and source['MxCurp'] =='match') or( 'NationalIDNumber' in list(source.keys()) and source['NationalIDNumber'] =='match') or ( 'NHSNumber' in list(source.keys()) and source['NHSNumber'] =='match') or ( 'NINumber' in list(source.keys()) and source['NINumber'] =='match') or ( 'PassportNumber' in list(source.keys()) and source['PassportNumber'] =='match') or ( 'PersonalPublicServiceNumber' in list(source.keys()) and source['PersonalPublicServiceNumber'] =='match') or ( 'RegistrationNumber' in list(source.keys()) and source['RegistrationNumber'] =='match') or ( 'SePinNumber' in list(source.keys()) and source['SePinNumber'] =='match') or ( 'SgNRICNumber' in list(source.keys()) and source['SgNRICNumber'] =='match') or ( 'SocialInsuranceNumber' in list(source.keys()) and ource['SocialInsuranceNumber'] =='match') or ( 'SocialSecurityNumber' in list(source.keys()) and source['SocialSecurityNumber'] =='match'):
             source['id_match'] = 1
 
 
