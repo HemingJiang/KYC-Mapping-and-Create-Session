@@ -1,7 +1,4 @@
-"""
-Code that goes along with the Airflow tutorial located at:
-https://github.com/apache/incubator-airflow/blob/master/airflow/example_dags/tutorial.py
-"""
+
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from datetime import datetime, timedelta
@@ -39,12 +36,12 @@ dag = DAG('kingslanding_pipeline',
 # t1, t2 and t3 are examples of tasks created by instantiating operators
 t1 = BashOperator(
     task_id='referral_code',
-    bash_command='python3 /repos/coinsquare_data_analytics/coinsquare-data-analytics/production/kingslanding_pipeline/referral_codes.py',
+    bash_command='python3 FILE PATH 1',
     dag=dag)
 
 t2 = BashOperator(
     task_id='print_date',
-    bash_command='python3 /home/peter/test/python_be_called.py ',
+    bash_command='python3 FILE PATH 2 ',
     dag=dag)
 
 
@@ -57,7 +54,7 @@ t3 = BashOperator(
 
 t4 = BashOperator(
     task_id='kingslanding_pipeline',
-    bash_command='python3 /repos/coinsquare_data_analytics/coinsquare-data-analytics/production/kingslanding_pipeline/management_tool.py',
+    bash_command='python3 FILE PATH 3',
     dag=dag)
 
 t1 >> t4
